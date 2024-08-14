@@ -3,16 +3,20 @@ import "./App.css";
 import Header from "./components/Header";
 import SideBar from "./components/SideBar";
 import Body from "./components/Body";
+import { Provider } from "react-redux";
+import appStore from "./utils/appStore";
 
 function App() {
   return (
-    <div>
-      <Header></Header>
+    <Provider store={appStore}>
       <div>
-        <SideBar></SideBar>
-        <Body></Body>
+        <Header></Header>
+        <div className="flex">
+          <SideBar></SideBar>
+          <Body></Body>
+        </div>
       </div>
-    </div>
+    </Provider>
   );
 }
 
