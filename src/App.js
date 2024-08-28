@@ -5,15 +5,28 @@ import SideBar from "./components/SideBar";
 import Body from "./components/Body";
 import { Provider } from "react-redux";
 import appStore from "./utils/appStore";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import WatchVideo from "./components/WatchVideo";
 
 function App() {
+  const routes = createBrowserRouter([
+    {
+      path: "/",
+      element: <Body></Body>,
+    },
+    {
+      path: "/watch",
+      element: <WatchVideo></WatchVideo>,
+    },
+  ]);
+
   return (
     <Provider store={appStore}>
       <div>
         <Header></Header>
         <div className="flex">
           <SideBar></SideBar>
-          <Body></Body>
+          <RouterProvider router={routes}></RouterProvider>
         </div>
       </div>
     </Provider>

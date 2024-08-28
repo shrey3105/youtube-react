@@ -1,12 +1,52 @@
-import React from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { toggleMenu } from "../utils/menuSlice";
+import { Link } from "react-router-dom";
+import { YOUTUBE_SEARCH_API } from "../utils/constants";
+import { addSearchResults, setSearchKey } from "../utils/searchSlice";
 
 const Header = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const prevSearchResults = useSelector((store) => store.search);
+
+  useEffect(() => {
+    // implement debouncing of 500ms
+    const timer = setTimeout(() => {
+      if (prevSearchResults.results[searchQuery] && searchQuery != "") {
+        setSearchSuggestions(prevSearchResults.results[searchQuery]);
+      } else {
+        getSearchSuggestions();
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
   const dispatch = useDispatch();
+
   const handleMenuToggle = () => {
     dispatch(toggleMenu());
   };
+
+  const getSearchSuggestions = async () => {
+    const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
+    const json = await data.json();
+    setSearchSuggestions(json[1]);
+    dispatch(
+      addSearchResults({
+        [searchQuery]: json[1],
+      })
+    );
+  };
+
+  const triggerSearch = (searchVal) => {
+    dispatch(setSearchKey(searchVal));
+  };
+
   return (
     <div className="flex justify-between shadow-md p-4">
       <div className="flex items-center">
@@ -22,15 +62,46 @@ const Header = () => {
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStsmgFMM4neY4YLWYz7vDF2s_CUZztacdWT-Fi7peS7Wrk-aPZUPdSI_WC-n7mp5Ovh4s&usqp=CAU"
         ></img>
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center relative">
         <input
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+          }}
           type="text"
           placeholder="Search"
           className="px-4 py-2 rounded-l-full border-gray-300 border-2 border-r-0 w-96"
+          onFocus={() => {
+            setShowSuggestions(true);
+          }}
+          onBlur={() => {
+            setShowSuggestions(false);
+          }}
         ></input>
         <button className="px-4 py-2 rounded-r-full border-gray-300 border-2">
           Search
         </button>
+
+        {showSuggestions && (
+          <ul
+            className="absolute top-full w-full z-10 bg-white rounded-lg shadow-lg py-2 px-5"
+            onMouseDown={(e) => {
+              e.preventDefault();
+            }}
+          >
+            {searchSuggestions.map((sugg) => (
+              <li
+                key={sugg}
+                className="py-2 px-4"
+                onClick={() => {
+                  triggerSearch(sugg);
+                }}
+              >
+                {sugg}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <div>
         <img
